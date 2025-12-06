@@ -14,7 +14,7 @@ const RfpSchema = new mongoose.Schema(
         {
           name: String,
           quantity: Number,
-          specs: Number,
+          specs: String,
         },
       ],
       budget: Number,

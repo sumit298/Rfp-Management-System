@@ -1,16 +1,34 @@
-import Proposal from "../models/proposal.model";
+import Proposal from "../models/proposal.model.js";
+import Rfp from "../models/rfp.models.js";
+import { parseVendorProposal } from "../services/ai.service.js";
 
 const ProposalController = {
-  receivePropasal: (req, res) => {
+  receivePropasal: async (req, res) => {
     try {
       const { emailContent, rfpId, vendorId } = req.body;
 
-      // TODO: Call AI service to parse email
-      // TODO: Save proposal to database
+      // Fetch RFP requirements
+      const rfp = await Rfp.findById(rfpId);
+      if (!rfp) {
+        return res.status(404).json({ error: "RFP not found", success: false });
+      }
 
-      res.json({ message: "Proposal received (stub)" });
+      // AI: Parse email content
+      const parsedProposal = await parseVendorProposal(emailContent, rfp.requirements);
+
+      // Save proposal
+      const proposal = new Proposal({
+        rfpId,
+        vendorId,
+        ...parsedProposal,
+        rawEmail: emailContent,
+        status: "received",
+      });
+      await proposal.save();
+
+      res.status(201).json({ data: proposal, success: true });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error.message, success: false });
     }
   },
 

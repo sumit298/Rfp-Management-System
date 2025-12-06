@@ -1,6 +1,6 @@
 // /backend/src/routes/proposal.routes.js
 import express from 'express';
-import ProposalController from '../controllers/proposal.controller';
+import ProposalController from '../controllers/proposal.controller.js';
 const ProposalRouter = express.Router();
 
 // Receive vendor response (email)

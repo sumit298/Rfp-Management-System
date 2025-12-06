@@ -1,4 +1,4 @@
-import Vendor from "../models/vendor.model";
+import Vendor from "../models/vendor.model.js";
 
 const VendorController = {
   createVendor: async (req, res) => {
@@ -56,6 +56,14 @@ const VendorController = {
           .json({ error: "Vendor not found", success: false });
       }
       res.status(200).json({ message: "Vendor deleted", success: true });
+    } catch (error) {
+      res.status(500).json({ error: error.message, success: false });
+    }
+  },
+  clearAllVendors: async (req, res) => {
+    try {
+      await Vendor.deleteMany({});
+      res.status(200).json({ message: "All vendors cleared", success: true });
     } catch (error) {
       res.status(500).json({ error: error.message, success: false });
     }

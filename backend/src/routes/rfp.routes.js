@@ -1,7 +1,7 @@
 // /backend/src/routes/rfp.routes.js
 import express from "express";
 const RFPRouter = express.Router();
-import RFPController from "../controllers/rfp.controller";
+import RFPController from "../controllers/rfp.controller.js";
 // Create RFP from natural language
 RFPRouter.post("/create", RFPController.createRfp);
 
