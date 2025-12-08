@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Plus, Edit2, Trash2, Users, Building, Mail, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,8 +8,7 @@ import { PremiumCard } from '@/components/PremiumCard';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { Vendor } from '@/lib/api';
-import { mockApi } from '@/lib/mockData';
-import toast from 'react-hot-toast'
+import toast from 'react-hot-toast';
 import {
   Dialog,
   DialogContent,
@@ -27,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useCreateVendor, useUpdateVendor, useDeleteVendor, useVendors } from '@/hooks/useVendor';
 
 interface VendorFormData {
   name: string;
@@ -43,34 +43,17 @@ const initialFormData: VendorFormData = {
 };
 
 export default function Vendors() {
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [formData, setFormData] = useState<VendorFormData>(initialFormData);
-  const [submitting, setSubmitting] = useState(false);
-  const [deleteVendor, setDeleteVendor] = useState<Vendor | null>(null);
+  const [vendorToDelete, setVendorToDelete] = useState<Vendor | null>(null);
+  const { data: vendors = [], isLoading } = useVendors();
+  const createVendor = useCreateVendor();
+  const updateVendor = useUpdateVendor();
+  const deleteVendor = useDeleteVendor();
 
 
-  useEffect(() => {
-    fetchVendors();
-  }, []);
 
-  const fetchVendors = async () => {
-    try {
-      setLoading(true);
-      const data = await mockApi.vendors.getAll();
-      setVendors(data);
-    } catch (err: any) {
-      toast({
-        title: 'Error',
-        description: err.message || 'Failed to fetch vendors',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const openAddForm = () => {
     setEditingVendor(null);
@@ -93,62 +76,40 @@ export default function Vendors() {
     e.preventDefault();
 
     if (!formData.name || !formData.email || !formData.company) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please fill in all required fields.',
-        variant: 'destructive',
-      });
+      toast.error('Please fill in all required fields.');
       return;
-    }
+    };
 
-    try {
-      setSubmitting(true);
-
-      if (editingVendor) {
-        await mockApi.vendors.update(editingVendor.id, formData);
-        toast({
-          title: 'Vendor Updated',
-          description: 'Vendor information has been updated.',
-        });
-      } else {
-        await mockApi.vendors.create(formData);
-        toast({
-          title: 'Vendor Added',
-          description: 'New vendor has been added successfully.',
-        });
-      }
-
-      setFormOpen(false);
-      fetchVendors();
-    } catch (err: any) {
-      toast({
-        title: 'Error',
-        description: err.message || 'Failed to save vendor',
-        variant: 'destructive',
+    if (editingVendor) {
+      updateVendor.mutate({ id: editingVendor._id, data: formData }, {
+        onSuccess: () => {
+          toast.success('Vendor updated successfully');
+          setFormOpen(false);
+        },
+        onError: () => toast.error('Failed to update vendor')
       });
-    } finally {
-      setSubmitting(false);
+    } else {
+      createVendor.mutate(formData, {
+        onSuccess: () => {
+          toast.success('Vendor created successfully');
+          setFormOpen(false);
+        },
+        onError: () => toast.error('Failed to create vendor')
+      });
     }
+
   };
 
-  const handleDelete = async () => {
-    if (!deleteVendor) return;
+  const handleDelete = () => {
+    if (!vendorToDelete) return;
 
-    try {
-      await mockApi.vendors.delete(deleteVendor.id);
-      toast({
-        title: 'Vendor Deleted',
-        description: 'Vendor has been removed.',
-      });
-      setDeleteVendor(null);
-      fetchVendors();
-    } catch (err: any) {
-      toast({
-        title: 'Error',
-        description: err.message || 'Failed to delete vendor',
-        variant: 'destructive',
-      });
-    }
+    deleteVendor.mutate(vendorToDelete._id, {
+      onSuccess: () => {
+        toast.success('Vendor deleted successfully');
+        setVendorToDelete(null);
+      },
+      onError: () => toast.error('Failed to delete vendor')
+    })
   };
 
   return (
@@ -170,7 +131,7 @@ export default function Vendors() {
           </Button>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <LoadingSpinner size="lg" message="Loading vendors..." />
           </div>
@@ -189,7 +150,7 @@ export default function Vendors() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {vendors.map((vendor) => (
-              <PremiumCard key={vendor.id} hoverable>
+              <PremiumCard key={vendor._id} hoverable>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
                     <Building className="h-6 w-6 text-foreground" />
@@ -205,7 +166,7 @@ export default function Vendors() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setDeleteVendor(vendor)}
+                      onClick={() => setVendorToDelete(vendor)}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -305,8 +266,8 @@ export default function Vendors() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? (
+                <Button type="submit" disabled={createVendor.isPending || updateVendor.isPending}>
+                  {createVendor.isPending || updateVendor.isPending ? (
                     <>
                       <LoadingSpinner size="sm" className="mr-2" />
                       Saving...
@@ -323,12 +284,12 @@ export default function Vendors() {
         </Dialog>
 
         {/* Delete Confirmation */}
-        <AlertDialog open={!!deleteVendor} onOpenChange={() => setDeleteVendor(null)}>
+        <AlertDialog open={!!vendorToDelete} onOpenChange={() => setVendorToDelete(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Vendor</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete {deleteVendor?.name}? This action cannot be undone.
+                Are you sure you want to delete {vendorToDelete?.name}? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

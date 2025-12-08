@@ -1,13 +1,10 @@
 import express from "express";
 import { createServer } from "http";
 import cors from "cors";
-import dotenv from "dotenv";
 import { connectDB } from "./config/database.js";
 import RFPRouter from "./routes/rfp.routes.js";
 import VendorRouter from "./routes/vendor.routes.js";
 import ProposalRouter from "./routes/proposal.route.js";
-
-dotenv.config();
 
 const app = express();
 

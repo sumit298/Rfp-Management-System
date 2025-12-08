@@ -8,51 +8,38 @@ import { PremiumCard } from '@/components/PremiumCard';
 import { AIBadge } from '@/components/AIBadge';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { RFP } from '@/lib/api';
-import { mockApi } from '@/lib/mockData';
 import toast from 'react-hot-toast';
+import { useCreateRFP } from '@/hooks/useRFPs';
+
 
 const PLACEHOLDER_TEXT = `Example: We need to procure 500 office chairs with ergonomic design, lumbar support, and adjustable height. Additionally, we require 200 standing desks with electric height adjustment. Budget is around $150,000. Delivery should be within 30 days. Payment terms: 50% upfront, 50% on delivery. 2-year warranty required.`;
 
 export default function CreateRFP() {
   const [input, setInput] = useState('');
   const [generatedRFP, setGeneratedRFP] = useState<RFP | null>(null);
-  const [loading, setLoading] = useState(false);
+  const createRFP = useCreateRFP();
+  const loading = createRFP.isPending;
   const navigate = useNavigate();
-  
+
 
   const handleGenerate = async () => {
     if (!input.trim()) {
-      toast({
-        title: 'Input required',
-        description: 'Please describe your RFP requirements.',
-        variant: 'destructive',
-      });
+      toast.error('Please describe your RFP requirements.');
       return;
     }
 
-    try {
-      setLoading(true);
-      const data = await mockApi.rfps.create(input);
-      setGeneratedRFP(data);
-      toast({
-        title: 'RFP Generated',
-        description: 'AI has structured your requirements.',
-      });
-    } catch (err: any) {
-      const message = err.message || 'Failed to generate RFP';
-      toast(message);
-    } finally {
-      setLoading(false);
-    }
+    createRFP.mutate(input, {
+      onSuccess: (data) => {
+        setGeneratedRFP(data);
+        toast.success("Requirements are structured now")
+      }
+    })
   };
 
   const handleSave = () => {
     if (generatedRFP) {
-      toast({
-        title: 'RFP Saved',
-        description: 'Your RFP has been saved successfully.',
-      });
-      navigate(`/rfps/${generatedRFP.id}`);
+      toast.success('Your RFP has been saved successfully.');
+      navigate(`/rfps/${generatedRFP._id}`);
     }
   };
 
@@ -153,13 +140,13 @@ export default function CreateRFP() {
             </div>
 
             {/* Items */}
-            {generatedRFP.items && generatedRFP.items.length > 0 && (
+            {generatedRFP.requirements.items && generatedRFP.requirements.items.length > 0 && (
               <div className="mb-6">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   Required Items
                 </h3>
                 <div className="space-y-3">
-                  {generatedRFP.items.map((item, index) => (
+                  {generatedRFP.requirements.items.map((item, index) => (
                     <div
                       key={index}
                       className="flex items-start gap-3 p-4 rounded-lg bg-muted/50"
@@ -171,11 +158,11 @@ export default function CreateRFP() {
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium">{item.name}</span>
                           <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium">
-                            Qty: {item.quantity} {item.unit || 'units'}
+                            Qty: {item.quantity} {'units'}
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {item.description}
+                          {item.specs}
                         </p>
                       </div>
                     </div>
@@ -186,36 +173,36 @@ export default function CreateRFP() {
 
             {/* Terms Grid */}
             <div className="grid gap-4 md:grid-cols-2">
-              {generatedRFP.budget && (
+              {generatedRFP.requirements.budget && (
                 <div className="p-4 rounded-lg border border-border">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                     Budget
                   </p>
-                  <p className="font-semibold">{generatedRFP.budget}</p>
+                  <p className="font-semibold">{generatedRFP.requirements.budget}</p>
                 </div>
               )}
-              {generatedRFP.deliveryTerms && (
+              {generatedRFP.requirements.deliveryDays && (
                 <div className="p-4 rounded-lg border border-border">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                     Delivery Terms
                   </p>
-                  <p className="font-semibold">{generatedRFP.deliveryTerms}</p>
+                  <p className="font-semibold">{generatedRFP.requirements.deliveryDays}</p>
                 </div>
               )}
-              {generatedRFP.paymentTerms && (
+              {generatedRFP.requirements.paymentTerms && (
                 <div className="p-4 rounded-lg border border-border">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                     Payment Terms
                   </p>
-                  <p className="font-semibold">{generatedRFP.paymentTerms}</p>
+                  <p className="font-semibold">{generatedRFP.requirements.paymentTerms}</p>
                 </div>
               )}
-              {generatedRFP.warranty && (
+              {generatedRFP.requirements.warranty && (
                 <div className="p-4 rounded-lg border border-border">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                     Warranty
                   </p>
-                  <p className="font-semibold">{generatedRFP.warranty}</p>
+                  <p className="font-semibold">{generatedRFP.requirements.warranty}</p>
                 </div>
               )}
             </div>

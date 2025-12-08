@@ -8,15 +8,12 @@ import { PremiumCard } from '@/components/PremiumCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import type { RFP, Vendor, Proposal } from '@/lib/api';
-import { mockApi } from '@/lib/mockData';
+import { type RFP, type Vendor, type Proposal, rfpApi, vendorApi, proposalApi } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 export default function RFPDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
-
   const [rfp, setRfp] = useState<RFP | null>(null);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -24,33 +21,32 @@ export default function RFPDetail() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      fetchData();
-    }
-  }, [id]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       const [rfpData, vendorsData, proposalsData] = await Promise.all([
-        mockApi.rfps.getById(id!),
-        mockApi.vendors.getAll(),
-        mockApi.proposals.getByRfpId(id!),
+        rfpApi.getById(id!),
+        vendorApi.getAll(),
+        proposalApi.getByRfpId(id!)
       ]);
       setRfp(rfpData || null);
       setVendors(vendorsData);
       setProposals(proposalsData);
     } catch (err: any) {
-      toast({
-        title: 'Error',
-        description: err.message || 'Failed to load RFP details',
-        variant: 'destructive',
-      });
+      toast.error(err.message || 'Failed to load RFP details');
+
+
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (id) {
+      fetchData();
+    }
+  }, [id])
 
   const handleVendorToggle = (vendorId: string) => {
     setSelectedVendors((prev) =>
@@ -62,28 +58,19 @@ export default function RFPDetail() {
 
   const handleSendRFP = async () => {
     if (selectedVendors.length === 0) {
-      toast({
-        title: 'Select vendors',
-        description: 'Please select at least one vendor.',
-        variant: 'destructive',
-      });
+      toast.error('Please select at least one vendor.');
       return;
     }
 
     try {
       setSending(true);
-      await mockApi.rfps.send(id!, selectedVendors);
-      toast({
-        title: 'RFP Sent',
-        description: `RFP sent to ${selectedVendors.length} vendor(s).`,
-      });
+      await rfpApi.send(id!, selectedVendors);
+      toast.success(`RFP sent to ${selectedVendors.length} vendor(s).`);
+
       fetchData();
     } catch (err: any) {
-      toast({
-        title: 'Error',
-        description: err.message || 'Failed to send RFP',
-        variant: 'destructive',
-      });
+      toast.error(err.message || 'Failed to send RFP');
+
     } finally {
       setSending(false);
     }
@@ -159,11 +146,11 @@ export default function RFPDetail() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Requirements */}
-            {rfp.items && rfp.items.length > 0 && (
+            {rfp.requirements.items && rfp.requirements.items.length > 0 && (
               <PremiumCard>
                 <h2 className="text-lg font-semibold mb-4">Requirements</h2>
                 <div className="space-y-3">
-                  {rfp.items.map((item, index) => (
+                  {rfp.requirements.items.map((item, index) => (
                     <div
                       key={index}
                       className="flex items-start gap-3 p-4 rounded-lg bg-muted/50"
@@ -175,11 +162,11 @@ export default function RFPDetail() {
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium">{item.name}</span>
                           <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium">
-                            Qty: {item.quantity} {item.unit || 'units'}
+                            Qty: {item.quantity} {'units'}
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {item.description}
+                          {item.specs}
                         </p>
                       </div>
                     </div>
@@ -192,36 +179,36 @@ export default function RFPDetail() {
             <PremiumCard>
               <h2 className="text-lg font-semibold mb-4">Terms & Conditions</h2>
               <div className="grid gap-4 md:grid-cols-2">
-                {rfp.budget && (
+                {rfp.requirements.budget && (
                   <div className="p-4 rounded-lg border border-border">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                       Budget
                     </p>
-                    <p className="font-semibold">{rfp.budget}</p>
+                    <p className="font-semibold">{rfp.requirements.budget}</p>
                   </div>
                 )}
-                {rfp.deliveryTerms && (
+                {rfp.requirements.deliveryDays && (
                   <div className="p-4 rounded-lg border border-border">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                       Delivery Terms
                     </p>
-                    <p className="font-semibold">{rfp.deliveryTerms}</p>
+                    <p className="font-semibold">{rfp.requirements.deliveryDays}</p>
                   </div>
                 )}
-                {rfp.paymentTerms && (
+                {rfp.requirements.paymentTerms && (
                   <div className="p-4 rounded-lg border border-border">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                       Payment Terms
                     </p>
-                    <p className="font-semibold">{rfp.paymentTerms}</p>
+                    <p className="font-semibold">{rfp.requirements.paymentTerms}</p>
                   </div>
                 )}
-                {rfp.warranty && (
+                {rfp.requirements.warranty && (
                   <div className="p-4 rounded-lg border border-border">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                       Warranty
                     </p>
-                    <p className="font-semibold">{rfp.warranty}</p>
+                    <p className="font-semibold">{rfp.requirements.warranty}</p>
                   </div>
                 )}
               </div>
@@ -253,12 +240,12 @@ export default function RFPDetail() {
                   <div className="space-y-3 mb-4">
                     {vendors.map((vendor) => (
                       <label
-                        key={vendor.id}
+                        key={vendor._id}
                         className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
                       >
                         <Checkbox
-                          checked={selectedVendors.includes(vendor.id)}
-                          onCheckedChange={() => handleVendorToggle(vendor.id)}
+                          checked={selectedVendors.includes(vendor._id)}
+                          onCheckedChange={() => handleVendorToggle(vendor._id)}
                         />
                         <div className="flex-1">
                           <p className="font-medium text-sm">{vendor.name}</p>

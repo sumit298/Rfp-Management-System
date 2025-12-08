@@ -12,7 +12,7 @@ import type { RFP } from '@/lib/api';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { data: rfps = [], isLoading: loading, error } = useRFPs(); 
+  const { data: rfps = [], isLoading: loading, error } = useRFPs();
 
   console.log(rfps)
 
@@ -44,7 +44,7 @@ export default function Dashboard() {
             <p className="text-destructive mb-4">
               {error?.message || 'Failed to load RFPs. Please try again.'}
             </p>
-            <Button onClick={()=> window.location.reload()} variant="outline">
+            <Button onClick={() => window.location.reload()} variant="outline">
               Try Again
             </Button>
           </PremiumCard>
@@ -103,10 +103,10 @@ export default function Dashboard() {
                           {rfp.description}
                         </p>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{rfp.items?.length || 0} items</span>
+                          <span>{rfp.requirements.items?.length || 0} items</span>
                           <span>•</span>
                           <span>
-                            {rfp.vendorIds?.length || 0} vendors
+                            {rfp.selectedVendors?.length || 0} vendors
                           </span>
                           {rfp.createdAt && (
                             <>

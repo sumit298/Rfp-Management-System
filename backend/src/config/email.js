@@ -1,27 +1,20 @@
 import nodemailer from 'nodemailer';
 
-// Reuse test account to avoid delays
-let cachedTransporter = null;
-
-const getTransporter = async () => {
-  if (!cachedTransporter) {
-    const testAccount = await nodemailer.createTestAccount();
-    cachedTransporter = nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      secure: false,
-      auth: {
-        user: testAccount.user,
-        pass: testAccount.pass,
-      },
-    });
-  }
-  return cachedTransporter;
+const getTransporter = () => {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  });
 };
 
 export const sendRFPEmail = async (rfp, vendors) => {
   try {
-    const transporter = await getTransporter();
+    const transporter = getTransporter();
 
     console.log('\n📧 SENDING RFP EMAILS:');
     
@@ -52,9 +45,8 @@ export const sendRFPEmail = async (rfp, vendors) => {
         `
       };
 
-      const info = await transporter.sendMail(mailOptions);
-      console.log(`✅ Email sent to ${vendor.name}`);
-      console.log(`📧 Preview: ${nodemailer.getTestMessageUrl(info)}`);
+      await transporter.sendMail(mailOptions);
+      console.log(`✅ Email sent to ${vendor.name} (${vendor.email})`);
     }
     
     console.log('✅ All RFP emails sent successfully\n');

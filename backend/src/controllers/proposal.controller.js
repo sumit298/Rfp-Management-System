@@ -5,12 +5,22 @@ import { parseVendorProposal } from "../services/ai.service.js";
 const ProposalController = {
   receivePropasal: async (req, res) => {
     try {
-      const { emailContent, rfpId, vendorId } = req.body;
+      const { emailContent, rfpId, vendorId, vendorEmail } = req.body;
 
       // Fetch RFP requirements
       const rfp = await Rfp.findById(rfpId);
       if (!rfp) {
         return res.status(404).json({ error: "RFP not found", success: false });
+      }
+
+      // Find vendor by email if vendorId not provided
+      let finalVendorId = vendorId;
+      if (!finalVendorId && vendorEmail) {
+        const Vendor = (await import("../models/vendor.model.js")).default;
+        const vendor = await Vendor.findOne({ email: vendorEmail });
+        if (vendor) {
+          finalVendorId = vendor._id;
+        }
       }
 
       // AI: Parse email content
@@ -19,7 +29,7 @@ const ProposalController = {
       // Save proposal
       const proposal = new Proposal({
         rfpId,
-        vendorId,
+        vendorId: finalVendorId,
         ...parsedProposal,
         rawEmail: emailContent,
         status: "received",
@@ -35,7 +45,7 @@ const ProposalController = {
   getProposalsByRfpId: async (req, res) => {
     try {
       const { rfpId } = req.params;
-      const proposals = await Proposal.find({ rfpId });
+      const proposals = await Proposal.find({ rfpId }).populate("vendorId");
       res.status(200).json({ data: proposals, success: true });
     } catch (error) {
       res.status(500).json({ error: error.message, success: false });

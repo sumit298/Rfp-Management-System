@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 export const useVendors = () => {
   return useQuery({
     queryKey: ["vendors"],
-    queryFn: () => vendorApi.getAll,
+    queryFn: vendorApi.getAll,
   });
 };
 

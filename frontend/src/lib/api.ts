@@ -44,7 +44,7 @@ export interface Vendor {
   _id: string;
   name: string;
   email: string;
-  company?: string;
+  company: string;
   phone?: string;
   contactPerson?: string;
   createdAt?: string;
@@ -106,13 +106,13 @@ export const rfpApi = {
 };
 
 export const vendorApi = {
-  getAll: () => api.get("/vendors"),
-  create: (data: Omit<Vendor, "id">) => api.post("/vendors", data),
+  getAll: (): Promise<Vendor[]> => api.get("/vendors"),
+  create: (data: Omit<Vendor, "_id" | "createdAt" | "updatedAt">) => api.post("/vendors", data),
   update: (id: string, data: Partial<Vendor>) =>
     api.put(`/vendors/${id}`, data),
   delete: (id: string) => api.delete(`/vendors/${id}`),
 };
 
 export const proposalApi = {
-  getByRfpId: (rfpId: string) => api.get(`/proposals/rfp/${rfpId}`),
+  getByRfpId: (rfpId: string): Promise<Proposal[]> => api.get(`/proposals/rfp/${rfpId}`),
 };
