@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node test-api.js",
-    "start": "node --env-file=.env ./src/server.js",
+    "start": "node ./src/server.js",
     "dev": "nodemon --exec 'node --env-file=.env' ./src/server.js"
   },
   "keywords": [],
