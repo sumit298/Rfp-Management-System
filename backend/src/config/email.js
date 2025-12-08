@@ -18,11 +18,11 @@ export const sendRFPEmail = async (rfp, vendors) => {
 
     console.log('\n📧 SENDING RFP EMAILS:');
     
-    for (const vendor of vendors) {
+    const emailPromises = vendors.map(async (vendor) => {
       const mailOptions = {
         from: '"RFP System" <rfp@company.com>',
         to: vendor.email,
-        subject: `RFP: ${rfp.title}`,
+        subject: `RFP: ${rfp.title} [RFP ID: ${rfp._id}]`,
         html: `
           <h2>Request for Proposal</h2>
           <p>Dear ${vendor.name},</p>
@@ -47,7 +47,9 @@ export const sendRFPEmail = async (rfp, vendors) => {
 
       await transporter.sendMail(mailOptions);
       console.log(`✅ Email sent to ${vendor.name} (${vendor.email})`);
-    }
+    });
+
+    await Promise.all(emailPromises);
     
     console.log('✅ All RFP emails sent successfully\n');
   } catch (error) {

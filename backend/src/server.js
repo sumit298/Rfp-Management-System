@@ -5,6 +5,8 @@ import { connectDB } from "./config/database.js";
 import RFPRouter from "./routes/rfp.routes.js";
 import VendorRouter from "./routes/vendor.routes.js";
 import ProposalRouter from "./routes/proposal.route.js";
+import { startEmailListener } from "./services/email-listener.service.js";
+
 
 const app = express();
 
@@ -14,6 +16,9 @@ const server = createServer(app);
 
 // Connect to database
 connectDB();
+
+// start Email listener
+startEmailListener();
 
 //Health check
 app.get("/api/health", (req, res) => {
