@@ -31,7 +31,7 @@ export default function CreateRFP() {
     createRFP.mutate(input, {
       onSuccess: (data) => {
         setGeneratedRFP(data);
-        toast.success("Requirements are structured now")
+        // toast.success("Requirements are structured now")
       }
     })
   };
