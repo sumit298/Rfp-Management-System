@@ -60,7 +60,7 @@ export const startEmailListener = () => {
 
   const fetchLatestEmail = () => {
     const lastMinute = new Date();
-    lastMinute.setMinutes(lastMinute.getMinutes() - 1);
+    lastMinute.setMinutes(lastMinute.getMinutes() - 5);
 
     imap.search(
       [["UNSEEN"], ["SINCE", lastMinute], ["SUBJECT", "RFP"]],

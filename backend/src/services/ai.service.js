@@ -36,7 +36,7 @@ export const parseVendorProposal = async (emailContent, rfpRequirements) => {
 
 RFP Requirements: ${JSON.stringify(rfpRequirements)}
 
-Return ONLY valid JSON in this exact format:
+Return ONLY valid JSON in this exact format (no markdown, no extra text):
 {
   "pricing": {
     "items": [{"name": "item", "unitPrice": number, "quantity": number, "total": number}],
@@ -53,9 +53,24 @@ Return ONLY valid JSON in this exact format:
     model: "gemini-2.5-flash",
     contents: prompt,
   });
-  const response = result.text;
+  
+  let response = result.text.trim();
+  
+  // Remove markdown code blocks if present
+  response = response.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+  
+  // Extract JSON object
   const jsonMatch = response.match(/\{[\s\S]*\}/);
-  return JSON.parse(jsonMatch[0]);
+  if (!jsonMatch) {
+    throw new Error('No valid JSON found in AI response');
+  }
+  
+  try {
+    return JSON.parse(jsonMatch[0]);
+  } catch (error) {
+    console.error('Failed to parse AI response:', jsonMatch[0]);
+    throw new Error('Invalid JSON from AI: ' + error.message);
+  }
 };
 
 export const compareProposals = async (proposals, rfpRequirements) => {
