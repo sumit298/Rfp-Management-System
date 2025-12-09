@@ -237,23 +237,34 @@ export default function RFPDetail() {
               ) : (
                 <>
                   <div className="space-y-3 mb-4">
-                    {vendors.map((vendor) => (
-                      <label
-                        key={vendor._id}
-                        className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
-                      >
-                        <Checkbox
-                          checked={selectedVendors.includes(vendor._id)}
-                          onCheckedChange={() => handleVendorToggle(vendor._id)}
-                        />
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{vendor.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {vendor.company}
-                          </p>
-                        </div>
-                      </label>
-                    ))}
+                    {vendors.map((vendor) => {
+                      const hasProposal = proposals.some(p => p.vendorId._id === vendor._id);
+                      return (
+                        <label
+                          key={vendor._id}
+                          className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                        >
+                          <Checkbox
+                            checked={selectedVendors.includes(vendor._id)}
+                            onCheckedChange={() => handleVendorToggle(vendor._id)}
+                            disabled={hasProposal}
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-sm">{vendor.name}</p>
+                              {hasProposal && (
+                                <span className="inline-flex items-center rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-600">
+                                  Responded
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {vendor.company}
+                            </p>
+                          </div>
+                        </label>
+                      );
+                    })}
                   </div>
 
                   <Button
