@@ -66,11 +66,10 @@ export default function RFPDetail() {
       setSending(true);
       await rfpApi.send(id!, selectedVendors);
       toast.success(`RFP sent to ${selectedVendors.length} vendor(s).`);
-
+      setSelectedVendors([]);
       fetchData();
     } catch (err: any) {
       toast.error(err.message || 'Failed to send RFP');
-
     } finally {
       setSending(false);
     }

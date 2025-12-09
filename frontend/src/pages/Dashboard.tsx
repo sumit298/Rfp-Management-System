@@ -14,7 +14,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { data: rfps = [], isLoading: loading, error } = useRFPs();
 
-  console.log(rfps)
 
   const stats = {
     total: rfps.length,
