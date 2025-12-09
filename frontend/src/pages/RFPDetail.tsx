@@ -239,6 +239,8 @@ export default function RFPDetail() {
                   <div className="space-y-3 mb-4">
                     {vendors.map((vendor) => {
                       const hasProposal = proposals.some(p => p.vendorId._id === vendor._id);
+                      const wasSent = rfp.selectedVendors?.includes(vendor._id);
+                      
                       return (
                         <label
                           key={vendor._id}
@@ -247,16 +249,20 @@ export default function RFPDetail() {
                           <Checkbox
                             checked={selectedVendors.includes(vendor._id)}
                             onCheckedChange={() => handleVendorToggle(vendor._id)}
-                            disabled={hasProposal}
+                            disabled={hasProposal || wasSent}
                           />
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <p className="font-medium text-sm">{vendor.name}</p>
-                              {hasProposal && (
+                              {hasProposal ? (
                                 <span className="inline-flex items-center rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-600">
-                                  Responded
+                                  ✓ Responded
                                 </span>
-                              )}
+                              ) : wasSent ? (
+                                <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-medium text-blue-600">
+                                  → Sent
+                                </span>
+                              ) : null}
                             </div>
                             <p className="text-xs text-muted-foreground">
                               {vendor.company}

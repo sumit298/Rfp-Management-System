@@ -36,6 +36,12 @@ export const startEmailListener = () => {
       if (err) throw err;
       console.log("Monitoring index for vendor proposals...");
 
+      // Check immediately on startup
+      setTimeout(() => {
+        console.log("🔍 Initial email check...");
+        fetchLatestEmail();
+      }, 2000);
+
       imap.on("mail", () => {
         console.log("New Email Received.");
         fetchLatestEmail();
@@ -44,7 +50,7 @@ export const startEmailListener = () => {
       setInterval(() => {
         console.log("🔄 Polling for new emails...");
         fetchLatestEmail();
-      }, 30000);
+      }, 10000);
     });
   });
 
